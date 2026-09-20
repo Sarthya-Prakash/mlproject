@@ -1,11 +1,10 @@
-pandas==2.1.4
-numpy==1.26.4
-seaborn
+streamlit
+pandas
+numpy
+scikit-learn
 matplotlib
-scikit-learn==1.3.2
+seaborn
 catboost
 xgboost
 dill
-Flask
-gunicorn
 #-e .
