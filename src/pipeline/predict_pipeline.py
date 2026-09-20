@@ -1,6 +1,5 @@
 import sys
 import pandas as pd
-import dill
 
 from src.exception import CustomException
 from src.utils import load_object
@@ -8,20 +7,46 @@ from src.utils import load_object
 
 class PredictPipeline:
     def __init__(self):
-        pass
+        self.model_path = 'artifacts/model.pkl'
+        self.preprocessor_path = 'artifacts/preprocessor.pkl'
+
+    def _refresh_artifacts(self):
+        try:
+            from src.components.data_ingestion import DataIngestion
+            from src.components.data_transformation import DataTransformation
+            from src.components.model_trainer import ModelTrainer
+
+            data_ingestion = DataIngestion()
+            train_path, test_path = data_ingestion.intiate_data_ingestion()
+
+            data_transformation = DataTransformation()
+            train_arr, test_arr, _ = data_transformation.initiate_data_transformation(
+                train_path,
+                test_path,
+            )
+
+            model_trainer = ModelTrainer()
+            model_trainer.initiate_model_trainer(train_arr, test_arr)
+
+        except Exception as e:
+            raise CustomException(e, sys)
 
     def predict(self,features):
         try:
-            model_path = 'artifacts/model.pkl'
-            preprocessor_path = 'artifacts/preprocessor.pkl'
-            model = load_object(file_path=model_path)
-            preprocessor = load_object(file_path=preprocessor_path)
+            model = load_object(file_path=self.model_path)
+            preprocessor = load_object(file_path=self.preprocessor_path)
+        except Exception:
+            self._refresh_artifacts()
+            model = load_object(file_path=self.model_path)
+            preprocessor = load_object(file_path=self.preprocessor_path)
+
+        try:
             data_scaled = preprocessor.transform(features)
             preds = model.predict(data_scaled)
             return preds
-        
+
         except Exception as e:
-            raise CustomException(e,sys)
+            raise CustomException(e, sys)
 
 
 class CustomData:
